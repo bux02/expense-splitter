@@ -34,4 +34,20 @@ class MainTest {
 
         assertThrows(IllegalArgumentException.class, () -> Main.settle(balances));
     }
+
+    @Test
+    void zeroBalanceIsIgnored() {
+        Map<String, BigDecimal> balances = new HashMap<>();
+        balances.put("Dev", new BigDecimal("50"));
+        balances.put("Fay", new BigDecimal("-20"));
+        balances.put("Gus", new BigDecimal("-30"));
+        balances.put("Hana", new BigDecimal("0"));
+
+        List<Main.Payment> result = Main.settle(balances);
+
+        for (Main.Payment p : result) {
+            assertNotEquals("Hana", p.debtor());
+            assertNotEquals("Hana", p.creditor());
+        }
+    }
 }
