@@ -25,4 +25,13 @@ class MainTest {
                 new Main.Payment("Gus", "Dev", new BigDecimal("30")),
                 result.get(1));
     }
+
+    @Test
+    void unbalancedGroupThrows() {
+        Map<String, BigDecimal> balances = new HashMap<>();
+        balances.put("Dev", new BigDecimal("50"));
+        balances.put("Fay", new BigDecimal("-20"));
+
+        assertThrows(IllegalArgumentException.class, () -> Main.settle(balances));
+    }
 }
