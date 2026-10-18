@@ -1,5 +1,6 @@
 package com.spendsmart;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.*;
 
 public class Main {
@@ -81,5 +82,34 @@ public class Main {
             }
         }
         return payments;
+    }
+
+    //Splits the balance evenly between all people
+    //If it doesnt divide evenly the leftover amount goes to the first person
+    public static List<BigDecimal> splitEvenly(BigDecimal total, List<String> people) {
+
+        if (people.isEmpty()) {
+            throw new IllegalArgumentException("There must be at least one person");
+        }
+
+        BigDecimal totalPerPerson = total.divide(BigDecimal.valueOf(people.size()), 2,
+                RoundingMode.DOWN);
+
+        BigDecimal fullTotal = totalPerPerson.multiply(BigDecimal.valueOf(people.size()));
+
+        BigDecimal remainder = total.subtract(fullTotal);
+
+        List<BigDecimal> shares = new ArrayList<>();
+
+        for (int i = 0; i < people.size(); i++) {
+            if (i != 0) {
+                shares.add(totalPerPerson);
+            }
+            else {
+                shares.add(totalPerPerson.add(remainder));
+            }
+        }
+
+        return shares;
     }
 }

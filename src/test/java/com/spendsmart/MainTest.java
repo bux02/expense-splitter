@@ -50,4 +50,33 @@ class MainTest {
             assertNotEquals("Hana", p.creditor());
         }
     }
+
+    @Test
+    void sevenPersonCase() {
+        List<BigDecimal> shares = Main.splitEvenly(new BigDecimal("10.00"),
+                List.of("A", "B", "C", "D", "E", "F", "G"));
+
+        assertEquals(7, shares.size());
+        assertEquals(new BigDecimal("1.48"), shares.get(0));
+        assertEquals(new BigDecimal("1.42"), shares.get(1));
+    }
+
+    @Test
+    void sharesAddUpToTotal() {
+        List<BigDecimal> shares = Main.splitEvenly(new BigDecimal("10.00"),
+                List.of("A", "B", "C", "D", "E", "F", "G"));
+
+        BigDecimal sum = BigDecimal.ZERO;
+        for (BigDecimal p : shares) {
+            sum = sum.add(p);
+        }
+
+        assertEquals(new BigDecimal("10.00"), sum);
+    }
+
+    @Test
+    void emptyListThrows() {
+        assertThrows(IllegalArgumentException.class, () -> Main.splitEvenly(new BigDecimal("10.00"),
+                new ArrayList<>()));
+    }
 }
