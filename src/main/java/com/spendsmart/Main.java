@@ -6,6 +6,7 @@ import java.util.*;
 public class Main {
     record Balance(String name, BigDecimal amount) {}
     record Payment(String debtor, String creditor, BigDecimal amount) {}
+    record Expense(String paidBy, BigDecimal amount, List<String> splitBetween) {}
 
     public static void main(String[] args) {
 
@@ -26,6 +27,54 @@ public class Main {
         } catch (IllegalArgumentException e) {
             System.out.println("Caught: " + e.getMessage());
         }
+    }
+
+    public static Map<String, BigDecimal> calculateBalances(List<Expense> expenses) {
+        Map<String, BigDecimal> balances = new HashMap<>();
+        for (Expense expense : expenses) {
+            //Credit
+            BigDecimal current = balances.getOrDefault(expense.paidBy(), new BigDecimal("0.00"));
+            balances.put(expense.paidBy(), current.add(expense.amount()));
+
+            //Debt
+            List<BigDecimal> shares = splitEvenly(expense.amount(),
+                    expense.splitBetween());
+            for (int i = 0; i < expense.splitBetween().size(); i++) {
+                String person = expense.splitBetween().get(i);
+                BigDecimal personBalance = balances.getOrDefault(person, new BigDecimal("0.00"));
+                balances.put(person, personBalance.subtract(shares.get(i)));
+            }
+        }
+        return balances;
+    }
+
+    //Splits the balance evenly between all people
+    //If it doesnt divide evenly the leftover amount goes to the first person
+    public static List<BigDecimal> splitEvenly(BigDecimal total, List<String> people) {
+
+        if (people.isEmpty()) {
+            throw new IllegalArgumentException("There must be at least one person");
+        }
+
+        BigDecimal totalPerPerson = total.divide(BigDecimal.valueOf(people.size()), 2,
+                RoundingMode.DOWN);
+
+        BigDecimal fullTotal = totalPerPerson.multiply(BigDecimal.valueOf(people.size()));
+
+        BigDecimal remainder = total.subtract(fullTotal);
+
+        List<BigDecimal> shares = new ArrayList<>();
+
+        for (int i = 0; i < people.size(); i++) {
+            if (i != 0) {
+                shares.add(totalPerPerson);
+            }
+            else {
+                shares.add(totalPerPerson.add(remainder));
+            }
+        }
+
+        return shares;
     }
 
     public static List<Payment> settle(Map<String, BigDecimal> balances) {
@@ -82,34 +131,5 @@ public class Main {
             }
         }
         return payments;
-    }
-
-    //Splits the balance evenly between all people
-    //If it doesnt divide evenly the leftover amount goes to the first person
-    public static List<BigDecimal> splitEvenly(BigDecimal total, List<String> people) {
-
-        if (people.isEmpty()) {
-            throw new IllegalArgumentException("There must be at least one person");
-        }
-
-        BigDecimal totalPerPerson = total.divide(BigDecimal.valueOf(people.size()), 2,
-                RoundingMode.DOWN);
-
-        BigDecimal fullTotal = totalPerPerson.multiply(BigDecimal.valueOf(people.size()));
-
-        BigDecimal remainder = total.subtract(fullTotal);
-
-        List<BigDecimal> shares = new ArrayList<>();
-
-        for (int i = 0; i < people.size(); i++) {
-            if (i != 0) {
-                shares.add(totalPerPerson);
-            }
-            else {
-                shares.add(totalPerPerson.add(remainder));
-            }
-        }
-
-        return shares;
     }
 }

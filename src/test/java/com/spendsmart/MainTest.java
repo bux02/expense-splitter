@@ -79,4 +79,49 @@ class MainTest {
         assertThrows(IllegalArgumentException.class, () -> Main.splitEvenly(new BigDecimal("10.00"),
                 new ArrayList<>()));
     }
+
+    @Test
+    void calculateBalancesForTwoExpenses() {
+        List<String> everyone = List.of("Ana", "Ben", "Cara");
+        List<Main.Expense> expenses = List.of(
+                new Main.Expense("Ana", new BigDecimal("30.00"), everyone),
+                new Main.Expense("Ben", new BigDecimal("60.00"), everyone));
+
+        Map<String, BigDecimal> balances = Main.calculateBalances(expenses);
+
+        assertEquals(new BigDecimal("0.00"), balances.get("Ana"));
+        assertEquals(new BigDecimal("30.00"), balances.get("Ben"));
+        assertEquals(new BigDecimal("-30.00"), balances.get("Cara"));
+    }
+
+    @Test
+    void unevenExpenseStillSumsToZero() {
+        List<Main.Expense> expenses = List.of(
+                new Main.Expense("Cara", new BigDecimal("10.00"),
+                        List.of("Ana", "Ben", "Cara")));
+
+        Map<String, BigDecimal> balances = Main.calculateBalances(expenses);
+
+        BigDecimal sum = BigDecimal.ZERO;
+        for (BigDecimal p : balances.values()) {
+            sum = sum.add(p);
+        }
+
+        assertEquals(new BigDecimal("0.00"), sum);
+    }
+
+    @Test
+    void expensesToPaymentsPipeline() {
+        List<String> everyone = List.of("Ana", "Ben", "Cara");
+        List<Main.Expense> expenses = List.of(
+                new Main.Expense("Ana", new BigDecimal("30.00"), everyone),
+                new Main.Expense("Ben", new BigDecimal("60.00"), everyone));
+
+        Map<String, BigDecimal> balances = Main.calculateBalances(expenses);
+        List<Main.Payment> payments = Main.settle(balances);
+
+        assertEquals(1, payments.size());
+        assertEquals(new Main.Payment("Cara", "Ben", new BigDecimal("30.00")),
+                payments.get(0));
+    }
 }
